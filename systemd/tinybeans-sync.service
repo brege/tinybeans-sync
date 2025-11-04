@@ -7,7 +7,7 @@ Type=oneshot
 User=tinybeans
 Group=tinybeans
 WorkingDirectory=/opt/tinybeans
-ExecStart=/usr/bin/python3 /opt/tinybeans/date_handler.py --from-last-date
+ExecStart=/usr/bin/python3 /opt/tinybeans/cli.py --from-last-date
 StandardOutput=journal
 StandardError=journal
 

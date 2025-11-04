@@ -32,22 +32,22 @@ Getting ready for first run:
 
 Download images from last successful date onwards:
 ```bash
-python date_handler.py --from-last-date
+python cli.py --from-last-date
 ```
 
 Download a date range:
 ```bash
-python date_handler.py --after 2025-06-01 --before 2025-08-31
+python cli.py --after 2025-06-01 --before 2025-08-31
 ```
 
 Catch up from a specific day through today:
 ```bash
-python date_handler.py --after 2025-10-27
+python cli.py --after 2025-10-27
 ```
 
 Force re-download (ignores history):
 ```bash
-python date_handler.py --after 2025-06-01 --force
+python cli.py --after 2025-06-01 --force
 ```
 
 ## Configuration
@@ -62,4 +62,4 @@ Edit `config.yaml` to customize:
 
 The system tracks downloaded files in `.tinybeans_history.json` in `output_dir` to avoid re-downloading deleted images.
 
-Delete this file to start fresh, or rerun with `--after <date>` to start from a specific date.
+Delete `.tinybeans_history.json` to start fresh, or rerun with `--after <date>` to start from a specific date.  Use `--force` to restore image files from a date range or over a date range.

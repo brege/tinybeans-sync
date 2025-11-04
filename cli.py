@@ -4,8 +4,8 @@ Date handler orchestrator for Tinybeans downloads
 """
 import argparse
 from datetime import datetime, timedelta
-from downloader import TinybeansDownloader
-from history import DownloadHistory
+from src.downloader import TinybeansDownloader
+from src.history import DownloadHistory
 
 class DateHandler:
     def __init__(self, config_path='config.yaml'):
@@ -40,7 +40,7 @@ class DateHandler:
             else:
                 current = current.replace(month=month + 1)
         
-        print(f"\n🎉 Total downloaded across all months: {total_downloaded}")
+        print(f"\nTotal downloaded across all months: {total_downloaded}")
         return total_downloaded
     
     def get_from_last_date_range(self):
@@ -87,7 +87,7 @@ def main():
     # Pass force flag to downloader
     if args.force:
         handler.downloader.force = True
-        print("🔄 Force mode: Ignoring download history")
+        print("Force mode: Ignoring download history")
     
     try:
         # Determine what dates to process
@@ -138,7 +138,7 @@ def main():
                 return 1
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
     
     return 0

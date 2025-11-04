@@ -2,7 +2,7 @@
 """
 Tinybeans API client
 """
-from auth import TinybeansAuth
+from .auth import TinybeansAuth
 
 class TinybeansAPI:
     def __init__(self, config_path='config.yaml'):

@@ -5,8 +5,8 @@ Image downloader for Tinybeans entries
 import os
 import requests
 from datetime import datetime
-from api import TinybeansAPI
-from history import DownloadHistory
+from .api import TinybeansAPI
+from .history import DownloadHistory
 
 class TinybeansDownloader:
     def __init__(self, config_path='config.yaml'):
@@ -157,6 +157,3 @@ class TinybeansDownloader:
         with open(filepath, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-
-# This module is now used via date_handler.py
-# For direct testing: python -c "from downloader import TinybeansDownloader; TinybeansDownloader().download_month(2025, 9)"
