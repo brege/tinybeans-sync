@@ -3,7 +3,6 @@
 Image downloader for Tinybeans entries
 """
 import os
-import requests
 from datetime import datetime
 from .api import TinybeansAPI
 from .history import DownloadHistory
@@ -96,7 +95,7 @@ class TinybeansDownloader:
                 # Check if we should ignore thumbnails
                 ignore_thumbnails = self.config.get('download', {}).get('ignore_thumbnails', False)
                 if ignore_thumbnails and 'thumbnail' in original_url.lower():
-                    print(f"  Skipping video thumbnail")
+                    print("  Skipping video thumbnail")
                     continue
                 
                 # Generate clean filename
@@ -124,7 +123,7 @@ class TinybeansDownloader:
                 
                 # Check history first (unless force mode)
                 if not self.force and self.history.is_attempted(original_filename):
-                    print(f"  Already attempted (in history)")
+                    print("  Already attempted (in history)")
                     continue
                 
                 # Download if not exists on disk (or force mode)
@@ -135,15 +134,15 @@ class TinybeansDownloader:
                         self._set_file_timestamp(filepath, photo_timestamp)
                         self.history.mark_attempted(original_filename)
                         downloaded += 1
-                        print(f"  Downloaded")
+                        print("  Downloaded")
                     except Exception as e:
                         print(f"  Error: {e}")
                 else:
                     # File exists and not in history - add to history
                     self.history.mark_attempted(original_filename)
-                    print(f"  Already exists (added to history)")
+                    print("  Already exists (added to history)")
             else:
-                print(f"  No original image found")
+                print("  No original image found")
         
         print(f"Downloaded {downloaded} new images to {output_dir}")
         return downloaded

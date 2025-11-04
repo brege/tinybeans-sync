@@ -5,7 +5,6 @@ Date handler orchestrator for Tinybeans downloads
 import argparse
 from datetime import datetime, timedelta
 from src.downloader import TinybeansDownloader
-from src.history import DownloadHistory
 
 class DateHandler:
     def __init__(self, config_path='config.yaml'):
