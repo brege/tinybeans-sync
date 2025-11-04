@@ -63,3 +63,7 @@ Edit `config.yaml` to customize:
 The system tracks downloaded files in `.tinybeans_history.json` in `output_dir` to avoid re-downloading deleted images.
 
 Delete `.tinybeans_history.json` to start fresh, or rerun with `--after <date>` to start from a specific date.  Use `--force` to restore image files from a date range or over a date range.
+
+## License
+
+[GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
