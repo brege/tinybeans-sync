@@ -25,3 +25,7 @@ dates:
   single_date: null                 # YYYY-MM-DD format
   after: null                       # e.g., "2025-06-01"
   before: null                      # e.g., "2025-08-31"
+
+logging:
+  level: "info"
+  file: "/var/lib/tinybeans-sync/logs/tinybeans-sync.log"

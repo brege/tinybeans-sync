@@ -3,11 +3,41 @@
 Date handler orchestrator for Tinybeans downloads
 """
 import argparse
+import logging
+import os
 from datetime import datetime, timedelta
 from src.downloader import TinybeansDownloader
 
+DEFAULT_CONFIG_PATH = "/var/lib/tinybeans-sync/config.yaml"
+logger = logging.getLogger(__name__)
+
+def setup_logging(args, config):
+    """Configure console and optional file logging."""
+    logging_config = (config or {}).get('logging', {})
+    level_name = str(logging_config.get('level', 'INFO')).upper()
+    level = getattr(logging, level_name, logging.INFO)
+    
+    console_format = "%(asctime)s %(levelname)s %(name)s: %(message)s" if args.daemon else "%(message)s"
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(console_format))
+    
+    logging.basicConfig(level=level, handlers=[console_handler], force=True)
+    
+    log_file = logging_config.get('file')
+    if log_file:
+        log_path = os.path.expanduser(log_file)
+        log_dir = os.path.dirname(log_path)
+        try:
+            if log_dir:
+                os.makedirs(log_dir, exist_ok=True)
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+            logging.getLogger().addHandler(file_handler)
+        except OSError as exc:
+            logger.warning("Unable to write log file %s: %s", log_path, exc)
+
 class DateHandler:
-    def __init__(self, config_path='config.yaml'):
+    def __init__(self, config_path=DEFAULT_CONFIG_PATH):
         self.downloader = TinybeansDownloader(config_path)
         self.config = self.downloader.config
         # Use the same history instance as the downloader
@@ -15,12 +45,12 @@ class DateHandler:
         
     def download_single_month(self, year, month):
         """Download all images for a single month"""
-        print(f"Processing {year}-{month:02d}")
+        logger.info("Processing %04d-%02d", year, month)
         return self.downloader.download_month(year, month)
     
     def download_date_range(self, start_date, end_date):
         """Download images for a date range (by months)"""
-        print(f"Processing date range: {start_date} to {end_date}")
+        logger.info("Processing date range: %s to %s", start_date, end_date)
         
         current = start_date.replace(day=1)  # Start at beginning of month
         total_downloaded = 0
@@ -29,7 +59,7 @@ class DateHandler:
             year = current.year
             month = current.month
             
-            print(f"\n{'='*50}")
+            logger.info("=" * 50)
             downloaded = self.download_single_month(year, month)
             total_downloaded += downloaded
             
@@ -39,22 +69,22 @@ class DateHandler:
             else:
                 current = current.replace(month=month + 1)
         
-        print(f"\nTotal downloaded across all months: {total_downloaded}")
+        logger.info("Total downloaded across all months: %d", total_downloaded)
         return total_downloaded
     
     def get_from_last_date_range(self):
         """Get date range starting from last download timestamp"""
         latest = self.history.get_latest_timestamp()
         if latest is None:
-            print("No download history found, starting from config dates")
+            logger.info("No download history found, starting from config dates")
             return None
         
         # Start from the day after the last download
         start_date = (latest + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
         
-        print(f"Resuming from last download: {latest.strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"New range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+        logger.info("Resuming from last download: %s", latest.strftime('%Y-%m-%d %H:%M:%S'))
+        logger.info("New range: %s to %s", start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
         
         return start_date, end_date
     
@@ -72,21 +102,23 @@ class DateHandler:
 
 def main():
     parser = argparse.ArgumentParser(description='Tinybeans Date Handler - Download images by date range')
-    parser.add_argument('--config', '-c', default='config.yaml', help='Config file path')
+    parser.add_argument('--config', '-c', default=DEFAULT_CONFIG_PATH, help='Config file path')
     parser.add_argument('--force', action='store_true', help='Ignore history and re-download everything')
     
     parser.add_argument('--from-last-date', action='store_true', help='Resume from last download')
     parser.add_argument('--after', metavar='DATE', help='Download on/after DATE (e.g., 2025-07-01)')
     parser.add_argument('--before', metavar='DATE', help='Download on/before DATE (e.g., 2025-08-31)')
+    parser.add_argument('--daemon', action='store_true', help='Emit timestamped logs for daemon usage')
     
     args = parser.parse_args()
-    
+
     handler = DateHandler(args.config)
+    setup_logging(args, handler.config)
     
     # Pass force flag to downloader
     if args.force:
         handler.downloader.force = True
-        print("Force mode: Ignoring download history")
+        logger.info("Force mode: Ignoring download history")
     
     try:
         # Determine what dates to process
@@ -102,7 +134,7 @@ def main():
                 start_date, end_date = date_range
                 handler.download_date_range(start_date, end_date)
             else:
-                print("No download history found. Use specific dates instead.")
+                logger.warning("No download history found. Use specific dates instead.")
                 return 1
                 
         else:
@@ -116,7 +148,7 @@ def main():
                     start_date, end_date = date_range
                     handler.download_date_range(start_date, end_date)
                 else:
-                    print("No download history found. Configure specific dates in config.yaml")
+                    logger.warning("No download history found. Configure specific dates in config.yaml")
                     return 1
                     
             elif dates_config.get('single_date'):
@@ -133,11 +165,11 @@ def main():
                 handler.download_date_range(start_date, end_date)
                 
             else:
-                print("No date configuration found. Use CLI arguments or configure dates in config.yaml")
+                logger.warning("No date configuration found. Use CLI arguments or configure dates in config.yaml")
                 return 1
             
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error("Error: %s", e)
         return 1
     
     return 0

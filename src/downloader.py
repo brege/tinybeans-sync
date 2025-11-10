@@ -2,10 +2,13 @@
 """
 Image downloader for Tinybeans entries
 """
+import logging
 import os
 from datetime import datetime
 from .api import TinybeansAPI
 from .history import DownloadHistory
+
+logger = logging.getLogger(__name__)
 
 class TinybeansDownloader:
     def __init__(self, config_path='config.yaml'):
@@ -57,17 +60,17 @@ class TinybeansDownloader:
             config_output_dir = self.config.get('download', {}).get('output_dir', 'downloads')
             output_dir = os.path.expanduser(os.path.join(config_output_dir, f"{year}-{month:02d}"))
         
-        print(f"Downloading images for {year}-{month:02d}")
+        logger.info("Downloading images for %04d-%02d", year, month)
         
         # Get entries from API
         entries = self.api.get_entries(year, month)
         photo_entries = [e for e in entries if e.get('type') == 'PHOTO']
         
-        print(f"Found {len(entries)} total entries, {len(photo_entries)} photos")
+        logger.info("Found %d total entries, %d photos", len(entries), len(photo_entries))
         
         # Skip if no photos found
         if len(photo_entries) == 0:
-            print("No photos to download")
+            logger.info("No photos to download")
             return 0
         
         # Create directory only if we have photos to download
@@ -85,7 +88,7 @@ class TinybeansDownloader:
             else:
                 date_str = f"unknown_{i:03d}"
             
-            print(f"Entry {i}/{len(photo_entries)}: {entry_id} ({date_str})")
+            logger.info("Entry %d/%d: %s (%s)", i, len(photo_entries), entry_id, date_str)
             
             # Get original quality image URL
             blobs = entry.get('blobs', {})
@@ -95,7 +98,7 @@ class TinybeansDownloader:
                 # Check if we should ignore thumbnails
                 ignore_thumbnails = self.config.get('download', {}).get('ignore_thumbnails', False)
                 if ignore_thumbnails and 'thumbnail' in original_url.lower():
-                    print("  Skipping video thumbnail")
+                    logger.info("Skipping video thumbnail for entry %s", entry_id)
                     continue
                 
                 # Generate clean filename
@@ -123,28 +126,28 @@ class TinybeansDownloader:
                 
                 # Check history first (unless force mode)
                 if not self.force and self.history.is_attempted(original_filename):
-                    print("  Already attempted (in history)")
+                    logger.info("Entry %s already attempted (history)", entry_id)
                     continue
                 
                 # Download if not exists on disk (or force mode)
                 if self.force or not os.path.exists(filepath):
                     try:
-                        print(f"   {filename}")
+                        logger.info("Downloading %s", filename)
                         self._download_image(original_url, filepath)
                         self._set_file_timestamp(filepath, photo_timestamp)
                         self.history.mark_attempted(original_filename)
                         downloaded += 1
-                        print("  Downloaded")
+                        logger.info("Downloaded %s", filename)
                     except Exception as e:
-                        print(f"  Error: {e}")
+                        logger.error("Error downloading %s: %s", filename, e)
                 else:
                     # File exists and not in history - add to history
                     self.history.mark_attempted(original_filename)
-                    print("  Already exists (added to history)")
+                    logger.info("Already exists, added to history: %s", filename)
             else:
-                print("  No original image found")
+                logger.info("No original image found for entry %s", entry_id)
         
-        print(f"Downloaded {downloaded} new images to {output_dir}")
+        logger.info("Downloaded %d new images to %s", downloaded, output_dir)
         return downloaded
     
     def _download_image(self, url, filepath):

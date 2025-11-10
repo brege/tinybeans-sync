@@ -3,8 +3,11 @@
 Download history tracking for Tinybeans
 """
 import json
+import logging
 import os
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class DownloadHistory:
     def __init__(self, history_file='.tinybeans_history.json'):
@@ -18,7 +21,7 @@ class DownloadHistory:
                 with open(self.history_file, 'r') as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
-                print(f"Warning: Could not load {self.history_file}, starting fresh")
+                logger.warning("Could not load %s, starting fresh", self.history_file)
                 return {}
         return {}
     
@@ -28,7 +31,7 @@ class DownloadHistory:
             with open(self.history_file, 'w') as f:
                 json.dump(self.history, f, indent=2)
         except IOError as e:
-            print(f"Warning: Could not save history: {e}")
+            logger.warning("Could not save history %s: %s", self.history_file, e)
     
     def is_attempted(self, filename):
         """Check if filename has been attempted before"""

@@ -7,7 +7,7 @@ Type=oneshot
 User=tinybeans
 Group=tinybeans
 WorkingDirectory=/opt/tinybeans
-ExecStart=/opt/tinybeans/.venv/bin/python /opt/tinybeans/cli.py --from-last-date
+ExecStart=/opt/tinybeans/.venv/bin/python /opt/tinybeans/cli.py --config /var/lib/tinybeans-sync/config.yaml --from-last-date --daemon
 StandardOutput=journal
 StandardError=journal
 
