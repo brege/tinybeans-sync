@@ -16,23 +16,31 @@ git clone https://github.com/brege/tinybeans-sync /opt/tinybeans
 
 Creating a virtual environment and installing requirements:
 
-```
+```bash
 cd /opt/tinybeans
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Getting ready for first run:
+Prepare the data directory:
 
-1. Copy `config.yaml.example` to `config.yaml`
-2. Fill in your email, password, and tinybeans\_id (you can get this from journal URLs)
+```bash
+mkdir /var/lib/tinybeans-sync
+sudo chown -R tinybeans:tinybeans /var/lib/tinybeans-sync
+cp config.yaml.example /var/lib/tinybeans-sync/config.yaml
+```
+
+After copying `config.yaml.example` to `/var/lib/tinybeans-sync/config.yaml`, fill in your 
+- **email**
+- **password**
+- **tinybeans_id** (you can get this from journal URLs)
 
 ## Usage
 
 Download images from last successful date onwards:
 ```bash
-python cli.py --from-last-date
+python cli.py --from-last-date    # --data /var/lib/tinybeans-sync
 ```
 
 Download a date range:
@@ -57,12 +65,13 @@ Edit `config.yaml` to customize:
 - Filename patterns (uses `{date}` and `{time}` placeholders)
 - Timestamp fixing to match photo dates
 - Thumbnail filtering for videos (videos are not yet supported)
+- Logging level/target (defaults to `/var/lib/tinybeans-sync/logs/tinybeans-sync.log`)
 
 ## History
 
-The system tracks downloaded files in `.tinybeans_history.json` in `output_dir` to avoid re-downloading deleted images.
+Downloaded files are tracked in `/var/lib/tinybeans-sync/tinybeans_history.json` to avoid re-downloading deleted images.
 
-Delete `.tinybeans_history.json` to start fresh, or rerun with `--after <date>` to start from a specific date.  Use `--force` to restore image files from a date range or over a date range.
+Delete that history file to start fresh, or rerun with `--after <date>` to start from a specific date.  Use `--force` to restore image files from a date range or over a date range via `--before` and `--after`.
 
 ## License
 
