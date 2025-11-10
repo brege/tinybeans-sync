@@ -8,10 +8,10 @@ import os
 from datetime import datetime, timedelta
 from src.downloader import TinybeansDownloader
 
-DEFAULT_CONFIG_PATH = "/var/lib/tinybeans-sync/config.yaml"
+DEFAULT_DATA_DIR = "/var/lib/tinybeans-sync"
 logger = logging.getLogger(__name__)
 
-def setup_logging(args, config):
+def setup_logging(args, config, data_dir):
     """Configure console and optional file logging."""
     logging_config = (config or {}).get('logging', {})
     level_name = str(logging_config.get('level', 'INFO')).upper()
@@ -23,9 +23,14 @@ def setup_logging(args, config):
 
     logging.basicConfig(level=level, handlers=[console_handler], force=True)
 
-    log_file = logging_config.get('file')
-    if log_file:
-        log_path = os.path.expanduser(log_file)
+    log_setting = logging_config.get('file')
+    if log_setting is None:
+        log_setting = os.path.join(data_dir, 'logs', 'tinybeans-sync.log')
+
+    if log_setting:
+        log_path = os.path.expanduser(log_setting)
+        if not os.path.isabs(log_path):
+            log_path = os.path.join(data_dir, log_path)
         log_dir = os.path.dirname(log_path)
         try:
             if log_dir:
@@ -37,8 +42,8 @@ def setup_logging(args, config):
             logger.warning("Unable to write log file %s: %s", log_path, exc)
 
 class DateHandler:
-    def __init__(self, config_path=DEFAULT_CONFIG_PATH):
-        self.downloader = TinybeansDownloader(config_path)
+    def __init__(self, config_path, data_dir):
+        self.downloader = TinybeansDownloader(config_path, data_dir)
         self.config = self.downloader.config
         # Use the same history instance as the downloader
         self.history = self.downloader.history
@@ -102,7 +107,8 @@ class DateHandler:
 
 def main():
     parser = argparse.ArgumentParser(description='Tinybeans Date Handler - Download images by date range')
-    parser.add_argument('--config', '-c', default=DEFAULT_CONFIG_PATH, help='Config file path')
+    parser.add_argument('--data', default=DEFAULT_DATA_DIR, help='Base data directory (config/logs/history)')
+    parser.add_argument('--config', '-c', help='Config file path (defaults to <data>/config.yaml)')
     parser.add_argument('--force', action='store_true', help='Ignore history and re-download everything')
 
     parser.add_argument('--from-last-date', action='store_true', help='Resume from last download')
@@ -112,8 +118,16 @@ def main():
 
     args = parser.parse_args()
 
-    handler = DateHandler(args.config)
-    setup_logging(args, handler.config)
+    data_dir = os.path.abspath(os.path.expanduser(args.data))
+    os.makedirs(data_dir, exist_ok=True)
+
+    if args.config:
+        config_path = os.path.abspath(os.path.expanduser(args.config))
+    else:
+        config_path = os.path.join(data_dir, 'config.yaml')
+
+    handler = DateHandler(config_path, data_dir)
+    setup_logging(args, handler.config, data_dir)
 
     # Pass force flag to downloader
     if args.force:

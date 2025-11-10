@@ -11,14 +11,17 @@ from .history import DownloadHistory
 logger = logging.getLogger(__name__)
 
 class TinybeansDownloader:
-    def __init__(self, config_path='config.yaml'):
+    def __init__(self, config_path='config.yaml', data_dir="/var/lib/tinybeans-sync"):
+        self.data_dir = os.path.abspath(os.path.expanduser(data_dir or "/var/lib/tinybeans-sync"))
+        os.makedirs(self.data_dir, exist_ok=True)
         self.api = TinybeansAPI(config_path)
         self.config = self.api.auth.config
         # Initialize history with target downloads directory
         config_output_dir = self.config.get('download', {}).get('output_dir', 'downloads')
         target_root = os.path.expanduser(config_output_dir)
-        os.makedirs(target_root, exist_ok=True)  # Ensure target root exists for history file
-        history_file = os.path.join(target_root, '.tinybeans_history.json')
+        os.makedirs(target_root, exist_ok=True)  # Ensure target root exists for downloads
+        history_file = os.path.join(self.data_dir, 'tinybeans_history.json')
+
         self.history = DownloadHistory(history_file)
         self.force = False  # Can be set to ignore history
 
