@@ -7,7 +7,7 @@ Type=oneshot
 User=__user__
 Group=__group__
 Environment="PATH=/home/__user__/.local/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=/usr/bin/env tinybeans-sync --data /var/lib/tinybeans-sync --config /var/lib/tinybeans-sync/config.yaml --from-last-date --daemon
+ExecStart=/usr/bin/env tinybeans-sync --data /home/__user__/.config/tinybeans-sync/ --config /home/__user__/.config/tinybeans-sync/config.yaml --from-last-date --daemon
 StandardOutput=journal
 StandardError=journal
 

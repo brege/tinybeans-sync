@@ -8,6 +8,16 @@ fi
 
 echo "Installing tinybeans-sync systemd service and timer..."
 
+echo "Stopping any existing tinybeans-sync units..."
+sudo systemctl stop tinybeans-sync.timer tinybeans-sync.service 2>/dev/null || true
+sudo systemctl disable tinybeans-sync.timer tinybeans-sync.service 2>/dev/null || true
+
+echo "Removing existing unit files (if present)..."
+sudo rm -f /etc/systemd/system/tinybeans-sync.{service,timer}
+
+echo "Reloading systemd daemon after removal..."
+sudo systemctl daemon-reload
+
 # Download service and timer templates
 curl -o tinybeans-sync.service https://raw.githubusercontent.com/brege/tinybeans-sync/refs/heads/main/systemd/tinybeans-sync.service
 curl -o tinybeans-sync.timer https://raw.githubusercontent.com/brege/tinybeans-sync/refs/heads/main/systemd/tinybeans-sync.timer

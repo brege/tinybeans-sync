@@ -28,4 +28,4 @@ dates:
 
 logging:
   level: "info"
-  file: "/var/lib/tinybeans-sync/logs/tinybeans-sync.log"
+  file: tinybeans-sync.log
