@@ -11,8 +11,8 @@ from .history import DownloadHistory
 logger = logging.getLogger(__name__)
 
 class TinybeansDownloader:
-    def __init__(self, config_path='config.yaml', data_dir="/var/lib/tinybeans-sync"):
-        self.data_dir = os.path.abspath(os.path.expanduser(data_dir or "/var/lib/tinybeans-sync"))
+    def __init__(self, config_path, data_dir):
+        self.data_dir = os.path.abspath(os.path.expanduser(data_dir))
         os.makedirs(self.data_dir, exist_ok=True)
         self.api = TinybeansAPI(config_path)
         self.config = self.api.auth.config

@@ -2,22 +2,21 @@
 """
 Date handler orchestrator for Tinybeans downloads
 """
-import argparse
 import logging
 import os
 from datetime import datetime, timedelta
+import click
 from tinybeans_sync.downloader import TinybeansDownloader
 
-DEFAULT_DATA_DIR = "/var/lib/tinybeans-sync"
 logger = logging.getLogger(__name__)
 
-def setup_logging(args, config, data_dir):
+def setup_logging(config, data_dir, daemon=False):
     """Configure console and optional file logging."""
     logging_config = (config or {}).get('logging', {})
     level_name = str(logging_config.get('level', 'INFO')).upper()
     level = getattr(logging, level_name, logging.INFO)
 
-    console_format = "%(asctime)s %(levelname)s %(name)s: %(message)s" if args.daemon else "%(message)s"
+    console_format = "%(asctime)s %(levelname)s %(name)s: %(message)s" if daemon else "%(message)s"
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter(console_format))
 
@@ -105,43 +104,47 @@ class DateHandler:
 
         raise ValueError(f"Unable to parse date: {date_str}")
 
-def main():
-    parser = argparse.ArgumentParser(description='Tinybeans Date Handler - Download images by date range')
-    parser.add_argument('--data', default=DEFAULT_DATA_DIR, help='Base data directory (config/logs/history)')
-    parser.add_argument('--config', '-c', help='Config file path (defaults to <data>/config.yaml)')
-    parser.add_argument('--force', action='store_true', help='Ignore history and re-download everything')
+@click.command()
+@click.option('--data', default=None, help='Data directory (defaults to XDG_CONFIG_HOME/tinybeans-sync)')
+@click.option('--config', '-c', default=None, help='Config file path (defaults to <data>/config.yaml)')
+@click.option('--force', is_flag=True, help='Ignore history and re-download everything')
+@click.option('--from-last-date', is_flag=True, help='Resume from last download')
+@click.option('--after', metavar='DATE', help='Download on/after DATE (e.g., 2025-07-01)')
+@click.option('--before', metavar='DATE', help='Download on/before DATE (e.g., 2025-08-31)')
+@click.option('--daemon', is_flag=True, help='Emit timestamped logs for daemon usage')
+def main(data, config, force, from_last_date, after, before, daemon):
+    """Download original quality images from Tinybeans photo journals."""
 
-    parser.add_argument('--from-last-date', action='store_true', help='Resume from last download')
-    parser.add_argument('--after', metavar='DATE', help='Download on/after DATE (e.g., 2025-07-01)')
-    parser.add_argument('--before', metavar='DATE', help='Download on/before DATE (e.g., 2025-08-31)')
-    parser.add_argument('--daemon', action='store_true', help='Emit timestamped logs for daemon usage')
+    # Resolve data directory
+    if data:
+        data_dir = os.path.abspath(os.path.expanduser(data))
+    else:
+        data_dir = click.get_app_dir('tinybeans-sync')
 
-    args = parser.parse_args()
-
-    data_dir = os.path.abspath(os.path.expanduser(args.data))
     os.makedirs(data_dir, exist_ok=True)
 
-    if args.config:
-        config_path = os.path.abspath(os.path.expanduser(args.config))
+    # Resolve config path
+    if config:
+        config_path = os.path.abspath(os.path.expanduser(config))
     else:
         config_path = os.path.join(data_dir, 'config.yaml')
 
     handler = DateHandler(config_path, data_dir)
-    setup_logging(args, handler.config, data_dir)
+    setup_logging(handler.config, data_dir, daemon=daemon)
 
     # Pass force flag to downloader
-    if args.force:
+    if force:
         handler.downloader.force = True
         logger.info("Force mode: Ignoring download history")
 
     try:
         # Determine what dates to process
-        if args.after:
-            start_date = handler.parse_date(args.after)
-            end_date = handler.parse_date(args.before) if args.before else datetime.now()
+        if after:
+            start_date = handler.parse_date(after)
+            end_date = handler.parse_date(before) if before else datetime.now()
             handler.download_date_range(start_date, end_date)
 
-        elif args.from_last_date:
+        elif from_last_date:
             # Resume from last download
             date_range = handler.get_from_last_date_range()
             if date_range:
@@ -149,7 +152,7 @@ def main():
                 handler.download_date_range(start_date, end_date)
             else:
                 logger.warning("No download history found. Use specific dates instead.")
-                return 1
+                raise SystemExit(1)
 
         else:
             # Use config defaults
@@ -163,7 +166,7 @@ def main():
                     handler.download_date_range(start_date, end_date)
                 else:
                     logger.warning("No download history found. Configure specific dates in config.yaml")
-                    return 1
+                    raise SystemExit(1)
 
             elif dates_config.get('single_date'):
                 # Single date
@@ -180,13 +183,12 @@ def main():
 
             else:
                 logger.warning("No date configuration found. Use CLI arguments or configure dates in config.yaml")
-                return 1
+                raise SystemExit(1)
 
     except Exception as e:
         logger.error("Error: %s", e)
-        return 1
+        raise SystemExit(1)
 
-    return 0
 
 if __name__ == "__main__":
-    exit(main())
+    main()
