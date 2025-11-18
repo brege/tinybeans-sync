@@ -4,58 +4,67 @@ Downloads original quality images from Tinybeans photo journals.
 
 ### Quickstart
 
-Installing in `/opt/tinybeans` with a dedicated user:
+From [PyPI](https://pypi.org/project/tinybeans-sync/):
 
 ```bash
-sudo mkdir /opt/tinybeans
-sudo groupadd tinybeans
-sudo useradd tinybeans -g tinybeans
-sudo chown -R tinybeans:tinybeans /opt/tinybeans
-git clone https://github.com/brege/tinybeans-sync /opt/tinybeans
+pip install tinybeans-sync
 ```
 
-Creating a virtual environment and installing requirements:
+Or from source:
 
 ```bash
-cd /opt/tinybeans
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+git clone https://github.com/brege/tinybeans-sync.git
+cd tinybeans-sync
+pip install .
+```
+
+Test it out:
+
+```bash
+tinybeans-sync --help
 ```
 
 Prepare the data directory:
 
 ```bash
 mkdir /var/lib/tinybeans-sync
-sudo chown -R tinybeans:tinybeans /var/lib/tinybeans-sync
+group=$(id -g)
+user=$(id -u)
+sudo chown -R $user:$group /var/lib/tinybeans-sync
 cp config.yaml.example /var/lib/tinybeans-sync/config.yaml
 ```
 
-After copying `config.yaml.example` to `/var/lib/tinybeans-sync/config.yaml`, fill in your 
+After copying [`config.yaml.example`](./config.yaml.example) to `/var/lib/tinybeans-sync/config.yaml`, fill in your 
 - **email**
 - **password**
 - **tinybeans_id** (you can get this from journal URLs)
+
+You should also configure the download path for all of photos.
+```yaml
+download:
+  output_dir: downloads # relative to the script's working directory, or absolute path
+```
 
 ## Usage
 
 Download images from last successful date onwards:
 ```bash
-python cli.py --from-last-date    # --data /var/lib/tinybeans-sync
+tinybeans-sync --from-last-date    # --data /var/lib/tinybeans-sync
 ```
 
 Download a date range:
 ```bash
-python cli.py --after 2025-06-01 --before 2025-08-31
+tinybeans-sync --after 2025-06-01 --before 2025-08-31
 ```
 
 Catch up from a specific day through today:
 ```bash
-python cli.py --after 2025-10-27
+tinybeans-sync --after 2025-10-27
 ```
 
 Force re-download (ignores history):
 ```bash
-python cli.py --after 2025-06-01 --force
+tinybeans-sync --after 2025-06-01 --force
 ```
 
 ## Configuration

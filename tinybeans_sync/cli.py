@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 from datetime import datetime, timedelta
-from src.downloader import TinybeansDownloader
+from tinybeans_sync.downloader import TinybeansDownloader
 
 DEFAULT_DATA_DIR = "/var/lib/tinybeans-sync"
 logger = logging.getLogger(__name__)
