@@ -1,13 +1,13 @@
 [Unit]
 Description=Sync Tinybeans photos
-After=network.target
+After=network-online.target
 
 [Service]
 Type=oneshot
-User=tinybeans
-Group=tinybeans
-WorkingDirectory=/opt/tinybeans
-ExecStart=/opt/tinybeans/.venv/bin/python /opt/tinybeans/cli.py --data /var/lib/tinybeans-sync --config /var/lib/tinybeans-sync/config.yaml --from-last-date --daemon
+User=__user__
+Group=__group__
+Environment="PATH=/home/__user__/.local/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/env tinybeans-sync --data /var/lib/tinybeans-sync --config /var/lib/tinybeans-sync/config.yaml --from-last-date --daemon
 StandardOutput=journal
 StandardError=journal
 

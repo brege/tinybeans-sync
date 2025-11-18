@@ -1,4 +1,4 @@
-# Tinybeans Downloader
+# tinybeans-sync
 
 Downloads original quality images from Tinybeans photo journals.
 
@@ -45,9 +45,36 @@ download:
   output_dir: downloads # relative to the script's working directory, or absolute path
 ```
 
+## Automated syncing with systemd
+
+To run tinybeans-sync automatically every 12 hours, use the provided systemd timer:
+
+```bash
+bash <(curl https://raw.githubusercontent.com/brege/tinybeans-sync/refs/heads/main/systemd/install.sh)
+```
+
+This will
+- Download and install the systemd service and timer files
+- Replace placeholders with your username and group
+- Enable the timer to check every 12 hours, relative to boot time
+
+This install script can be found in [GitHub](https://github.com/brege/tinybeans-sync/blob/main/systemd/install.sh).
+
+Timer status:
+```bash
+systemctl status tinybeans-sync.timer
+systemctl list-timers
+journalctl -u tinybeans-sync.service
+```
+
 ## Usage
 
-Download images from last successful date onwards:
+Options:
+```bash
+tinybeans-sync --help
+```
+
+Download images from last successful run date onwards:
 ```bash
 tinybeans-sync --from-last-date    # --data /var/lib/tinybeans-sync
 ```
@@ -62,25 +89,20 @@ Catch up from a specific day through today:
 tinybeans-sync --after 2025-10-27
 ```
 
-Force re-download (ignores history):
+Force re-download (ignores history file):
 ```bash
 tinybeans-sync --after 2025-06-01 --force
 ```
-
-## Configuration
-
-Edit `config.yaml` to customize:
-- Output directory (ensure its writable by the user you are running `tinybeans-sync` as)
-- Filename patterns (uses `{date}` and `{time}` placeholders)
-- Timestamp fixing to match photo dates
-- Thumbnail filtering for videos (videos are not yet supported)
-- Logging level/target (defaults to `/var/lib/tinybeans-sync/logs/tinybeans-sync.log`)
 
 ## History
 
 Downloaded files are tracked in `/var/lib/tinybeans-sync/tinybeans_history.json` to avoid re-downloading deleted images.
 
 Delete that history file to start fresh, or rerun with `--after <date>` to start from a specific date.  Use `--force` to restore image files from a date range or over a date range via `--before` and `--after`.
+
+## Roadmap
+
+- support video downloads
 
 ## License
 
