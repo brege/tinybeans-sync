@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tinybeans-sync"
-version = "0.1"
+version = "0.2"
 description = "Download original quality images from Tinybeans photo journals"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -42,7 +42,7 @@ tinybeans-sync = "tinybeans_sync.cli:main"
 packages = ["tinybeans_sync"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/config.yaml.example", "/systemd"]
+include = ["/tinybeans_sync", "/config.yaml.example", "/systemd"]
 
 [tool.ruff]
 
