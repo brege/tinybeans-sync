@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tinybeans-sync"
-version = "0.1.0"
+version = "0.1"
 description = "Download original quality images from Tinybeans photo journals"
 readme = "README.md"
 license = "GPL-3.0-or-later"

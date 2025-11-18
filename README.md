@@ -24,17 +24,7 @@ Test it out:
 tinybeans-sync --help
 ```
 
-Prepare the data directory:
-
-```bash
-mkdir /var/lib/tinybeans-sync
-group=$(id -g)
-user=$(id -u)
-sudo chown -R $user:$group /var/lib/tinybeans-sync
-cp config.yaml.example /var/lib/tinybeans-sync/config.yaml
-```
-
-After copying [`config.yaml.example`](./config.yaml.example) to `/var/lib/tinybeans-sync/config.yaml`, fill in your 
+After copying [`config.yaml.example`](./config.yaml.example) to `~/.config/tinybeans-sync/config.yaml`, fill in your 
 - **email**
 - **password**
 - **tinybeans_id** (you can get this from journal URLs)
@@ -42,7 +32,7 @@ After copying [`config.yaml.example`](./config.yaml.example) to `/var/lib/tinybe
 You should also configure the download path for all of photos.
 ```yaml
 download:
-  output_dir: downloads # relative to the script's working directory, or absolute path
+  output_dir: downloads  # relative to this project dir, or absolute path
 ```
 
 ## Automated syncing with systemd
@@ -76,7 +66,7 @@ tinybeans-sync --help
 
 Download images from last successful run date onwards:
 ```bash
-tinybeans-sync --from-last-date    # --data /var/lib/tinybeans-sync
+tinybeans-sync --from-last-date
 ```
 
 Download a date range:
@@ -96,7 +86,7 @@ tinybeans-sync --after 2025-06-01 --force
 
 ## History
 
-Downloaded files are tracked in `/var/lib/tinybeans-sync/tinybeans_history.json` to avoid re-downloading deleted images.
+Downloaded files are tracked in `~/.config/tinybeans-sync/tinybeans_history.json` (or your `--data` directory) to avoid re-downloading deleted images.
 
 Delete that history file to start fresh, or rerun with `--after <date>` to start from a specific date.  Use `--force` to restore image files from a date range or over a date range via `--before` and `--after`.
 
