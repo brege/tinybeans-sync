@@ -6,6 +6,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 import click
+from click_help_colors import HelpColorsCommand
 from tinybeans_sync.downloader import TinybeansDownloader
 
 logger = logging.getLogger(__name__)
@@ -104,14 +105,19 @@ class DateHandler:
 
         raise ValueError(f"Unable to parse date: {date_str}")
 
-@click.command()
-@click.option('--data', default=None, help='Data directory (defaults to XDG_CONFIG_HOME/tinybeans-sync)')
-@click.option('--config', '-c', default=None, help='Config file path (defaults to <data>/config.yaml)')
-@click.option('--force', is_flag=True, help='Ignore history and re-download everything')
-@click.option('--from-last-date', is_flag=True, help='Resume from last download')
-@click.option('--after', metavar='DATE', help='Download on/after DATE (e.g., 2025-07-01)')
-@click.option('--before', metavar='DATE', help='Download on/before DATE (e.g., 2025-08-31)')
-@click.option('--daemon', is_flag=True, help='Emit timestamped logs for daemon usage')
+@click.command(
+    cls=HelpColorsCommand,
+    help_headers_color="cyan",
+    help_options_color="green",
+    context_settings={"help_option_names": ["-h", "--help"]}
+)
+@click.option('--data', default=None, help='data directory (XDG_CONFIG_HOME/tinybeans-sync)')
+@click.option('--config', '-c', default=None, help='config file path (<data>/config.yaml)')
+@click.option('--force', is_flag=True, help='ignore history and re-download everything')
+@click.option('--from-last-date', is_flag=True, help='resume from last download')
+@click.option('--after', metavar='DATE', help='download on/after DATE (e.g., 2025-07-01)')
+@click.option('--before', metavar='DATE', help='download on/before DATE (e.g., 2025-08-31)')
+@click.option('--daemon', is_flag=True, help='emit timestamped logs')
 def main(data, config, force, from_last_date, after, before, daemon):
     """Download original quality images from Tinybeans photo journals."""
 
