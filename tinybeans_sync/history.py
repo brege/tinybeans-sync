@@ -2,6 +2,7 @@
 """
 Download history tracking for Tinybeans
 """
+
 import json
 import logging
 import os
@@ -9,8 +10,9 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 class DownloadHistory:
-    def __init__(self, history_file='.tinybeans_history.json'):
+    def __init__(self, history_file=".tinybeans_history.json"):
         self.history_file = history_file
         self.history = self._load_history()
 
@@ -18,9 +20,9 @@ class DownloadHistory:
         """Load history from JSON file"""
         if os.path.exists(self.history_file):
             try:
-                with open(self.history_file, 'r') as f:
+                with open(self.history_file) as f:
                     return json.load(f)
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 logger.warning("Could not load %s, starting fresh", self.history_file)
                 return {}
         return {}
@@ -28,9 +30,9 @@ class DownloadHistory:
     def _save_history(self):
         """Save history to JSON file"""
         try:
-            with open(self.history_file, 'w') as f:
+            with open(self.history_file, "w") as f:
                 json.dump(self.history, f, indent=2)
-        except IOError as e:
+        except OSError as e:
             logger.warning("Could not save history %s: %s", self.history_file, e)
 
     def is_attempted(self, filename):
@@ -49,8 +51,10 @@ class DownloadHistory:
         if not self.history:
             return None
 
-        timestamps = [datetime.fromisoformat(ts.replace('Z', '+00:00'))
-                     for ts in self.history.values()]
+        timestamps = [
+            datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            for ts in self.history.values()
+        ]
         return max(timestamps)
 
     def get_attempted_count(self):

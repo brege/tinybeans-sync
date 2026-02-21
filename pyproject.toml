@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tinybeans-sync"
-version = "0.2"
+version = "0.3"
 description = "Download original quality images from Tinybeans photo journals"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 authors = [
   { name = "Wyatt Brege" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
   "requests>=2.28.0",
   "beautifulsoup4>=4.11.0",
@@ -24,11 +24,6 @@ classifiers = [
   "Environment :: Console",
   "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
   "Topic :: Multimedia :: Graphics",
 ]
 
@@ -38,6 +33,15 @@ Repository = "https://github.com/brege/tinybeans-sync"
 [project.scripts]
 tinybeans-sync = "tinybeans_sync.cli:main"
 
+[dependency-groups]
+dev = [
+  "ty>=0.0.18",
+]
+
+[tool.ty.src]
+include = ["tinybeans_sync"]
+respect-ignore-files = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["tinybeans_sync"]
 
@@ -45,6 +49,11 @@ packages = ["tinybeans_sync"]
 include = ["/tinybeans_sync", "/config.yaml.example", "/systemd"]
 
 [tool.ruff]
+line-length = 88
 
 [tool.ruff.lint]
-extend-select = ["W"]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E203"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = true

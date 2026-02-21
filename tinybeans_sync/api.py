@@ -2,10 +2,12 @@
 """
 Tinybeans API client
 """
+
 from .auth import TinybeansAuth
 
+
 class TinybeansAPI:
-    def __init__(self, config_path='config.yaml'):
+    def __init__(self, config_path="config.yaml"):
         self.auth = TinybeansAuth(config_path)
 
     def get_entries(self, year, month):
@@ -17,13 +19,13 @@ class TinybeansAPI:
             raise ValueError("tinybeans_id required in config.yaml")
 
         endpoint = f"https://tinybeans.com/api/1/journals/{tinybeans_id}/entries"
-        params = {'year': year, 'month': month}
+        params = {"year": year, "month": month}
 
         response = session.get(endpoint, params=params)
         response.raise_for_status()
 
         data = response.json()
-        return data.get('entries', [])
+        return data.get("entries", [])
 
     def get_user_info(self):
         """Get authenticated user info"""
