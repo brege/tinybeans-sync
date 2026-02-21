@@ -3,12 +3,10 @@
 Date handler orchestrator for Tinybeans downloads
 """
 
+import argparse
 import logging
 import os
 from datetime import datetime, timedelta
-
-import click
-from click_help_colors import HelpColorsCommand
 
 from tinybeans_sync.downloader import TinybeansDownloader
 
@@ -48,6 +46,51 @@ def setup_logging(config, data_dir, daemon=False):
             logging.getLogger().addHandler(file_handler)
         except OSError as exc:
             logger.warning("Unable to write log file %s: %s", log_path, exc)
+
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="tinybeans-sync",
+        description="Download original quality images from Tinybeans photo journals.",
+    )
+    parser.add_argument(
+        "--data",
+        default=None,
+        help="data directory (XDG_CONFIG_HOME/tinybeans-sync)",
+    )
+    parser.add_argument(
+        "--config",
+        "-c",
+        default=None,
+        help="config file path (<data>/config.yaml)",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="ignore history and re-download everything",
+    )
+    parser.add_argument(
+        "--from-last-date",
+        action="store_true",
+        help="resume from last download",
+    )
+    parser.add_argument(
+        "--after", metavar="DATE", help="download on/after DATE (e.g., 2025-07-01)"
+    )
+    parser.add_argument(
+        "--before", metavar="DATE", help="download on/before DATE (e.g., 2025-08-31)"
+    )
+    parser.add_argument("--daemon", action="store_true", help="emit timestamped logs")
+    return parser.parse_args(argv)
+
+
+def default_data_dir():
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+    if xdg_config_home:
+        base_dir = os.path.abspath(os.path.expanduser(xdg_config_home))
+    else:
+        base_dir = os.path.join(os.path.expanduser("~"), ".config")
+    return os.path.join(base_dir, "tinybeans-sync")
 
 
 class DateHandler:
@@ -123,60 +166,42 @@ class DateHandler:
         raise ValueError(f"Unable to parse date: {date_str}")
 
 
-@click.command(
-    cls=HelpColorsCommand,
-    help_headers_color="cyan",
-    help_options_color="green",
-    context_settings={"help_option_names": ["-h", "--help"]},
-)
-@click.option(
-    "--data", default=None, help="data directory (XDG_CONFIG_HOME/tinybeans-sync)"
-)
-@click.option(
-    "--config", "-c", default=None, help="config file path (<data>/config.yaml)"
-)
-@click.option("--force", is_flag=True, help="ignore history and re-download everything")
-@click.option("--from-last-date", is_flag=True, help="resume from last download")
-@click.option(
-    "--after", metavar="DATE", help="download on/after DATE (e.g., 2025-07-01)"
-)
-@click.option(
-    "--before", metavar="DATE", help="download on/before DATE (e.g., 2025-08-31)"
-)
-@click.option("--daemon", is_flag=True, help="emit timestamped logs")
-def main(data, config, force, from_last_date, after, before, daemon):
+def main(argv=None):
     """Download original quality images from Tinybeans photo journals."""
+    args = parse_args(argv)
 
     # Resolve data directory
-    if data:
-        data_dir = os.path.abspath(os.path.expanduser(data))
+    if args.data:
+        data_dir = os.path.abspath(os.path.expanduser(args.data))
     else:
-        data_dir = click.get_app_dir("tinybeans-sync")
+        data_dir = default_data_dir()
 
     os.makedirs(data_dir, exist_ok=True)
 
     # Resolve config path
-    if config:
-        config_path = os.path.abspath(os.path.expanduser(config))
+    if args.config:
+        config_path = os.path.abspath(os.path.expanduser(args.config))
     else:
         config_path = os.path.join(data_dir, "config.yaml")
 
     handler = DateHandler(config_path, data_dir)
-    setup_logging(handler.config, data_dir, daemon=daemon)
+    setup_logging(handler.config, data_dir, daemon=args.daemon)
 
     # Pass force flag to downloader
-    if force:
+    if args.force:
         handler.downloader.force = True
         logger.info("Force mode: Ignoring download history")
 
     try:
         # Determine what dates to process
-        if after:
-            start_date = handler.parse_date(after)
-            end_date = handler.parse_date(before) if before else datetime.now()
+        if args.after:
+            start_date = handler.parse_date(args.after)
+            end_date = (
+                handler.parse_date(args.before) if args.before else datetime.now()
+            )
             handler.download_date_range(start_date, end_date)
 
-        elif from_last_date:
+        elif args.from_last_date:
             # Resume from last download
             date_range = handler.get_from_last_date_range()
             if date_range:
